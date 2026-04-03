@@ -477,6 +477,52 @@ describe provider_class do
     end
   end
 
+  context 'with duplicate entries file' do
+    let(:tmptarget) { aug_fixture('duplicates') }
+    let(:target) { tmptarget.path }
+
+    it 'removes duplicate entries when cleanup_duplicates is true' do
+      expect(provider_class).to receive(:sysctl).with(['-e', 'net.ipv4.ip_forward']).and_return('net.ipv4.ip_forward=0')
+      expect(provider_class).to receive(:sysctl).with('-n', 'net.ipv4.ip_forward').at_least(:once).and_return('1')
+      expect(provider_class).to receive(:sysctl).with('-w', 'net.ipv4.ip_forward=1')
+      expect(provider_class).to receive(:sysctl).with(['-e', 'net.ipv4.ip_forward']).and_return('net.ipv4.ip_forward=1')
+
+      apply!(Puppet::Type.type(:sysctl).new(
+               name: 'net.ipv4.ip_forward',
+               value: '1',
+               cleanup_duplicates: true,
+               target: target,
+               provider: 'augeas'
+             ))
+
+      aug_open(target, 'Sysctl.lns') do |aug|
+        matches = aug.match('/files/' + target + '/net.ipv4.ip_forward')
+        expect(matches.length).to eq(1)
+        expect(aug.get('/files/' + target + '/net.ipv4.ip_forward')).to eq('1')
+      end
+    end
+
+    it 'does not remove duplicate entries when cleanup_duplicates is false' do
+      expect(provider_class).to receive(:sysctl).with(['-e', 'net.ipv4.ip_forward']).and_return('net.ipv4.ip_forward=0')
+      expect(provider_class).to receive(:sysctl).with('-n', 'net.ipv4.ip_forward').at_least(:once).and_return('1')
+      expect(provider_class).to receive(:sysctl).with('-w', 'net.ipv4.ip_forward=1')
+      expect(provider_class).to receive(:sysctl).with(['-e', 'net.ipv4.ip_forward']).and_return('net.ipv4.ip_forward=1')
+
+      apply!(Puppet::Type.type(:sysctl).new(
+               name: 'net.ipv4.ip_forward',
+               value: '1',
+               cleanup_duplicates: false,
+               target: target,
+               provider: 'augeas'
+             ))
+
+      aug_open(target, 'Sysctl.lns') do |aug|
+        matches = aug.match('/files/' + target + '/net.ipv4.ip_forward')
+        expect(matches.length).to eq(3)
+      end
+    end
+  end
+
   context 'with broken file' do
     let(:tmptarget) { aug_fixture('broken') }
     let(:target) { tmptarget.path }

@@ -77,5 +77,22 @@ describe sysctl_type do
         expect(resource[:persist]).to eq(:true)
       end
     end
+
+    describe 'the cleanup_duplicates parameter' do
+      it 'is a valid parameter' do
+        resource = sysctl_type.new name: 'foo', cleanup_duplicates: :true
+        expect(resource[:cleanup_duplicates]).to eq(:true)
+      end
+
+      it 'defaults to false' do
+        resource = sysctl_type.new name: 'foo'
+        expect(resource[:cleanup_duplicates]).to eq(:false)
+      end
+
+      it 'is munged as a boolean' do
+        resource = sysctl_type.new name: 'foo', cleanup_duplicates: 'true'
+        expect(resource[:cleanup_duplicates]).to eq(:true)
+      end
+    end
   end
 end

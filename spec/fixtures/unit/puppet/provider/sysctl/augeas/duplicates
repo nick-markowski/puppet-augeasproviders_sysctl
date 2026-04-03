@@ -1,0 +1,11 @@
+# Kernel sysctl configuration file
+
+# Controls IP packet forwarding
+net.ipv4.ip_forward = 0
+
+net.ipv4.conf.default.rp_filter = 1
+
+# net.ipv4.ip_forward: duplicate entry
+net.ipv4.ip_forward = 1
+
+net.ipv4.ip_forward = 2

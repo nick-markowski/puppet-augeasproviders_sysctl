@@ -258,6 +258,17 @@ Puppet::Type.type(:sysctl).provide(:augeas, parent: Puppet::Type.type(:augeaspro
     end
   end
 
+  def cleanup_duplicate_entries
+    augopen! do |aug|
+      setvars(aug)
+      dupes = aug.match("$target/#{resource[:name]}")
+      next unless dupes.length > 1
+      dupes[1..].reverse_each do |dupe|
+        aug.rm(dupe)
+      end
+    end
+  end
+
   def flush
     if resource[:ensure] == :absent
       super
@@ -272,6 +283,9 @@ Puppet::Type.type(:sysctl).provide(:augeas, parent: Puppet::Type.type(:augeaspro
 
       # Ensures that we only save to disk when we're supposed to
       if resource[:persist] == :true
+        # Remove the resource if duplicates are found
+        cleanup_duplicate_entries if resource[:cleanup_duplicates] == :true
+
         # Create the entry on disk if it's not already there
         create if @property_hash[:persist] == :false
 

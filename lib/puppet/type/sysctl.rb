@@ -107,6 +107,12 @@ Puppet::Type.newtype(:sysctl) do
     defaultto(:false)
   end
 
+  newparam(:cleanup_duplicates, boolean: true) do
+    desc 'If set, remove duplicate entries for this key from the ($target) config file. Useful when sysctl.conf contains multiple declarations of the same parameter.'
+    newvalues(:true, :false)
+    defaultto(:false)
+  end
+
   autorequire(:file) do
     self[:target]
   end
